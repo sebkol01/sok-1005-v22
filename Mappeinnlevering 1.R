@@ -1,0 +1,243 @@
+library(data.table)
+library(tidyverse)
+library(zoo)
+library(dplyr)
+library(cowplot)
+
+
+Her henter jeg inn dataen jeg skal bruke for å lage et plot. Jeg gjør verdiene Globe, Year og Mo om til numeriske verdier så jeg kan bruke rollmean på de senere. Year og Mo blir satt sammen for å laga "Date" og jeg lager en ny kolonne "average_temp" som er det glidende gjennomsnittet. 
+
+
+low_trop <- fread("https://www.nsstc.uah.edu/data/msu/v6.0/tlt/uahncdc_lt_6.0.txt",
+)
+
+
+low_trop <- head(low_trop, -1)
+
+low_trop$Globe = as.numeric(low_trop$Globe)
+low_trop$Year = as.numeric(low_trop$Year)
+low_trop$Mo = as.numeric(low_trop$Mo)
+
+low_trop2 = low_trop %>% 
+  select(Year:Globe) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = zoo::rollmean(Globe, 13, 
+                                      fill = NA, align = "center"))
+
+
+Her lager jeg plottet
+
+
+text_box_label = "UAH Satelite based\nTemperature of the\nGlobal Lower Atmosphere\n(Version 6.0)"
+
+low_trop2 %>% 
+  ggplot(aes(x = Date)) +
+  geom_hline(yintercept = 0) +   
+  
+  geom_point(aes(y = Globe), colour = "blue4", shape = 21) +
+  geom_line(aes(y = Globe), colour = "blue4", alpha = 0.5) +
+  
+  geom_line(aes(y = average_temp, group = 1), 
+            colour = "red", size = 1)  +
+  scale_y_continuous(breaks = seq(from= -0.7,to=0.9, by = 0.1) , 
+                     labels = scales::comma) + 
+  
+  scale_x_date(date_breaks = "year", date_labels = "%Y",
+               expand = c(0,0.1)) + 
+  labs(title = "Latest Global Average Tropospheric Temperatures",
+       x = NULL,
+       y = "Departure from '91-'20 Avg. (deg. C)") +
+  theme_bw() +
+  annotate(geom="text", x=as.Date("2004-01-01"), y=-0.5, 
+           label="Running, centered\n13 month average", 
+           colour = "red") + 
+  geom_segment(x = as.Date("2004-01-01"), y=-0.45,
+               xend = as.Date("2008-01-01"), yend=-0.2,
+               arrow = arrow(angle = 20, type = "closed",
+                             length = unit(0.15, "inches")),
+               colour = "red", size = 1) +
+  annotate(geom="text", 
+           x=as.Date("1987-01-01"), 
+           y = 0.5, hjust = 0.5,
+           label = text_box_label,
+           colour = "blue4" ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.y = element_blank()) 
+
+
+
+Her legger jeg inn alle datasettene som skal brukes og gjør om til numeriske verdier i de kolonnene jeg skal bruke
+
+
+lotrop <- fread("http://vortex.nsstc.uah.edu/data/msu/v6.0/tlt/uahncdc_lt_6.0.txt")
+
+lotrop <- head(lotrop, -1)
+
+lotrop <- lotrop %>% 
+  select(Year, Mo, NoPol)
+
+
+lotrop$NoPol = as.numeric(lotrop$NoPol)
+lotrop$Year = as.numeric(lotrop$Year)
+lotrop$Mo = as.numeric(lotrop$Mo)
+
+lotrop = lotrop %>% 
+  select(Year:NoPol) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = mean(NoPol))
+
+# Leser og velger dataene jeg vil ha fra Mid - Troposphere og lager en kolonne med gjennomsnittlig temperatur
+
+
+midtrop <- fread("http://vortex.nsstc.uah.edu/data/msu/v6.0/tmt/uahncdc_mt_6.0.txt")
+midtrop <- head(midtrop, -1)
+
+midtrop <- midtrop %>% 
+  select(Year, Mo, NoPol)
+
+
+midtrop$NoPol = as.numeric(midtrop$NoPol)
+midtrop$Year = as.numeric(midtrop$Year)
+midtrop$Mo = as.numeric(midtrop$Mo)
+
+midtrop = midtrop %>% 
+  select(Year:NoPol) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = mean(NoPol))
+
+# Leser og velger dataene jeg vil ha fra Tropopause og lager en kolonne med gjennomsnittlig temperatur
+
+
+tropau <- fread("http://vortex.nsstc.uah.edu/data/msu/v6.0/ttp/uahncdc_tp_6.0.txt")
+tropau <- head(tropau, -1)
+
+tropau <- tropau %>% 
+  select(Year, Mo, NoPol)
+
+
+tropau$NoPol = as.numeric(tropau$NoPol)
+tropau$Year = as.numeric(tropau$Year)
+tropau$Mo = as.numeric(tropau$Mo)
+
+tropau = tropau %>% 
+  select(Year:NoPol) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = mean(NoPol))
+
+# Leser og velger dataene jeg vil ha fra Lower Stratosphere og lager en kolonne med gjennomsnittlig temperatur
+
+
+lostra <- fread("http://vortex.nsstc.uah.edu/data/msu/v6.0/tls/uahncdc_ls_6.0.txt", fill=TRUE)
+
+lostra <- lostra %>% 
+  select(Year, Mo, NoPol)
+
+lostra <- head(lostra, -12)
+
+lostra$NoPol = as.numeric(lostra$NoPol)
+lostra$Year = as.numeric(lostra$Year)
+lostra$Mo = as.numeric(lostra$Mo)
+
+lostra = lostra %>% 
+  select(Year:NoPol) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = mean(NoPol))
+
+
+
+Her gjør jeg dataframene til en liste og så slår jeg de sammen. 
+
+
+df_list <- list(lotrop, midtrop, lostra, tropau)
+
+avetemp <- rbindlist(df_list, use.names=FALSE)
+
+
+Her lager jeg alle plottene hver for seg.
+
+
+p1 <- lotrop %>% 
+  ggplot(aes(x = Date, y = NoPol)) + 
+  geom_line(col = "blue4") +
+  geom_point(col = "blue4")+
+  labs(title = "Lower Toposphere \n Temperatures 60-90? north",
+       x = "Date",
+       y = "Temperature")
+
+
+p2 <- midtrop %>% 
+  ggplot(aes(x = Date, y = NoPol)) + 
+  geom_line(col = "blue4") +
+  geom_point(col = "blue4")+
+  labs(title = "Middle Toposphere \n Temperatures 60-90? north",
+       x = "Date",
+       y = "Temperature")
+
+
+p3 <- tropau %>% 
+  ggplot(aes(x = Date, y = NoPol)) + 
+  geom_line(col = "blue4") +
+  geom_point(col = "blue4")+
+  labs(title = "Tropopause Temperatures 60-90? north",
+       x = "Date",
+       y = "Temperature")
+
+
+p4 <- lostra %>% 
+  ggplot(aes(x = Date, y = NoPol)) + 
+  geom_line(col = "blue4") +
+  geom_point(col = "blue4")+
+  labs(title = "Lower Stratosphere \n Temperatures 60-90? north",
+       x = "Date",
+       y = "Temperature")
+
+avetemp = avetemp %>% 
+  select(Year:NoPol) %>% 
+  mutate(Date = paste(Year, Mo, sep = "-")) %>%
+  mutate(Date = lubridate::ym(Date)) %>%
+  mutate(average_temp = zoo::rollmean(NoPol, 13, 
+                                      fill = NA, align = "center"))
+
+p5 <- avetemp %>% 
+  ggplot(aes(x = Date)) +
+  geom_hline(yintercept = 0) +   
+  geom_point(aes(y = average_temp), colour = "blue4", shape = 1, size = 0.8) + 
+  scale_y_continuous(breaks = seq(from= -0.5,to=1.9, by = 0.1) , 
+                     labels = scales::comma) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y",
+               expand = c(0,0.1)) + 
+  labs(title = "Average Tropospheric Temperatures \n 60-90? north",
+       x = NULL,
+       y = "Average Temperatures (deg. C)") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.y = element_blank()) 
+
+
+Her setter jeg alle plottene ved hverandre.
+
+
+plot_grid(p1, p2, p3, p4, p5, ncol = 5, labels = "AUTO")
+
+
+Her lager jeg et plot der man får en linje for alle sine temperaturer, og setter et plot med det glidende gjennomsnittet ved siden av.
+
+
+alldata <- ggplot()+
+  geom_line(data = lotrop, mapping = aes(x=Date, y=NoPol), color = "blue")+
+  geom_point(data = lotrop, mapping = aes(x=Date, y=NoPol), color = "blue")+
+  geom_line(data = lostra, mapping = aes(x=Date, y=NoPol), color = "red")+
+  geom_point(data = lostra, mapping = aes(x=Date, y=NoPol), color = "red")+
+  geom_line(data = midtrop, mapping = aes(x=Date, y=NoPol), color = "green")+
+  geom_line(data = midtrop, mapping = aes(x=Date, y=NoPol), color = "green")+
+  geom_line(data = tropau, mapping = aes(x=Date, y=NoPol), color = "orange")+
+  geom_line(data = tropau, mapping = aes(x=Date, y=NoPol), color = "orange")
+
+alldata
+
+plot_grid(alldata, p5)

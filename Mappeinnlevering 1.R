@@ -5,9 +5,6 @@ library(dplyr)
 library(cowplot)
 
 
-Her henter jeg inn dataen jeg skal bruke for å lage et plot. Jeg gjør verdiene Globe, Year og Mo om til numeriske verdier så jeg kan bruke rollmean på de senere. Year og Mo blir satt sammen for å laga "Date" og jeg lager en ny kolonne "average_temp" som er det glidende gjennomsnittet. 
-
-
 low_trop <- fread("https://www.nsstc.uah.edu/data/msu/v6.0/tlt/uahncdc_lt_6.0.txt",
 )
 

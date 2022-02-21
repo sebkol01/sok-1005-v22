@@ -210,29 +210,23 @@ p4 <- lostra %>%
 
 avetemp = avetemp %>% 
   select(Year:NoPol) %>% 
-  # combine Year and month to date column
   mutate(Date = paste(Year, Mo, sep = "-")) %>%
-  # convert this to a real date
   mutate(Date = lubridate::ym(Date)) %>%
-  # calculate the rolling mean
   mutate(average_temp = zoo::rollmean(NoPol, 13, 
                                       fill = NA, align = "center"))
 
 p5 <- avetemp %>% 
   ggplot(aes(x = Date)) +
-  geom_hline(yintercept = 0) +   # add line at 0 
-  # add points and line:
-  geom_point(aes(y = average_temp), colour = "blue4", shape = 1, size = 0.8) + # color should be outside the aes as it is not based on a column
+  geom_hline(yintercept = 0) +   
+  geom_point(aes(y = average_temp), colour = "blue4", shape = 1, size = 0.8) + 
   scale_y_continuous(breaks = seq(from= -0.5,to=1.9, by = 0.1) , 
                      labels = scales::comma) +
-  # format the x-axis
   scale_x_date(date_breaks = "year", date_labels = "%Y",
                expand = c(0,0.1)) + 
   labs(title = "Average Tropospheric Temperatures \n 60-90? north",
        x = NULL,
        y = "Average Temperatures (deg. C)") +
   theme_bw() +
-  # some finetuning:
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.y = element_blank()) 
 ```

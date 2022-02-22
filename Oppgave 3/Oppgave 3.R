@@ -52,7 +52,11 @@ table %>%
 
 lm(stopp ~ wltp, data = table)
 
-# 
+# De to verdiene vi får er en årsakssammenheng mellom kjørelengden bilen
+# blir sagt at den kan kjøre og den faktiske kjørelengden. 
+# Skjæringspunktet ligger på -26.6450 og wltp verdien er på 0.8671, som sier noe
+# om størrelsen på korrelasjonskoefficienten. I dette tilfellet er det positiv korellasjon.
+# Altså når x verdien øker, vil y typisk øke med en del av verdien som x øker.
 
 table %>% 
   select(wltp, stopp) %>% 

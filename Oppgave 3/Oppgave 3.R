@@ -51,3 +51,18 @@ table %>%
 # Oppgave 2
 
 lm(stopp ~ wltp, data = table)
+
+# 
+
+table %>% 
+  select(wltp, stopp) %>% 
+  ggplot(aes(x = wltp, y = stopp))+
+  geom_point()+
+  geom_smooth(method = lm)+
+  ggtitle("Driving range for Electric cars during winter")+
+  ylab("stop")+
+  xlab("WLTP range")+
+  scale_x_continuous(limits = c(200, 600))+
+  scale_y_continuous(limits = c(200, 600))+
+  geom_abline(col = "blue", size = .5)+
+  theme_bw()

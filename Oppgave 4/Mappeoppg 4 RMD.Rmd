@@ -1,0 +1,56 @@
+---
+title: "Mappeoppg 4 RMD"
+output: pdf_document
+author: "Sebastian Furuhaug Kolstad"
+---
+
+Loading packages
+
+```{r echo=TRUE}
+rm(list=ls())
+
+library(rvest)
+library(tidyverse)
+library(rlist)
+library(purrr)
+````
+
+Gathering URLs and putting them in a list, then naming them appropriately.
+
+```{r echo=TRUE}
+url_list <- 
+  list("https://timeplan.uit.no/emne_timeplan.php?sem=22v&module%5B%5D=SOK-1005-1&week=1-20&View=list",
+       "https://timeplan.uit.no/emne_timeplan.php?sem=22v&module%5B%5D=SOK-1006-1&week=1-20&View=list",
+       "https://timeplan.uit.no/emne_timeplan.php?sem=22v&module%5B%5D=SOK-1016-1&week=1-20&View=list")
+
+names(url_list) <- c("SOK-1005", "SOK-1006", "SOK-1016")
+```
+
+
+Creating a function for scraping web pages to make a table showing my schedule.
+
+```{r echo=TRUE}
+schedule <- function(url) {
+  page <- read_html(url)
+  table <- html_nodes(page, 'table') 
+  table <- html_table(table, fill=TRUE) 
+  dframe <- list.stack(table) 
+  colnames(dframe) <- dframe[1,]
+  dframe <- dframe %>% filter(!Dato=="Dato")
+  dframe <- dframe %>% separate(Dato, 
+                                into = c("Dag", "Dato"), 
+                                sep = "(?<=[A-Za-z])(?=[0-9])")
+  dframe <- dframe[-length(dframe$Dag),]
+  dframe$Dato <- as.Date(dframe$Dato, format="%d.%m.%Y")
+  dframe$Uke <- strftime(dframe$Dato, format = "%V")
+  dframe <- dframe %>% select(Dag,Dato,Uke,Tid,Rom)
+  return(dframe)
+}
+```
+
+
+Using the function to show the schedule for each of my classes.
+
+```{r echo=TRUE}
+map(url_list, schedule)
+```
